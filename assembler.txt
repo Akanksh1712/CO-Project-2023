@@ -1,0 +1,12 @@
+var X
+mov R1 #10
+mov R2 #32
+sub R2 R1 R3
+ld R2 X
+mul R3 R2 R1
+st R3 X
+var Y
+var T
+Loop:
+	Mul R6,R8
+hlt

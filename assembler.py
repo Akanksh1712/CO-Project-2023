@@ -26,14 +26,16 @@ Instructions = {
 
 regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '100', "R5" : '101', "R6" : '110', "FLAGS" : '111'}
 
-# define regex patterns for scanning patterns
-label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:$'
+import re
 
-instruction_pattern = r'^\s*(hlt|ld|st|mov|add|sub|mul|jmp|jz|jnz|cmp)\s+'
+# define regex patterns for scanning patterns
+label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*)(:\s*(.*))?$'
+
+instruction_pattern = r'^\s*(ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp)\s+'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
-instruction_pattern += r'(\s+(\#[0-99]{1,7}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*$'
+instruction_pattern += r'(\s+(\$[0-99]{1,7}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*$'
 
 variable_pattern = r'^\s*var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$'
 
@@ -41,7 +43,7 @@ variable_pattern = r'^\s*var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$'
 program_dict = {'labels': {}, 'instructions': {}, 'variables': {}}
 
 # open file and read contents
-with open('CO-Project-2023/assembler.txt', 'r') as f:
+with open('assembler.txt', 'r') as f:
     lines = f.readlines()
 
 # loop through lines in file and identify labels, instructions, and variables
@@ -53,6 +55,8 @@ for line in lines:
     label_match = re.match(label_pattern, line)
     if label_match:
         label = label_match.group(1)
+        #inst_label = label_match.group(3).strip()
+        #print(label)
         program_dict['labels'][label] = {'label_instructions': []}
 
     # check for instruction
@@ -64,7 +68,7 @@ for line in lines:
         for i in range(2, instruction_match.lastindex+1):
             operand = instruction_match.group(i)
             if operand:
-                if '#' in operand[1:].strip():
+                if '$' in operand[1:].strip():
                     imm = int(operand[2:])
                     bin_imm = (bin(imm)[2:]) #converting num to binary
                     new_imm = '{:07b}'.format(imm) #padding immideate to 7 bits
@@ -85,48 +89,236 @@ for line in lines:
         if program_dict['instructions'][line.strip()] == {'opcode': 'mov', 'operands': operands, 'imm': new_imm}: #check if mov has 1 register and 1 immideate only
             program_dict['instructions'][line.strip()] = {'opcode': 'mov', 'operands': operands, 'imm': new_imm, 'val_reg' : val_reg}
 
+        elif program_dict['instructions'][line.strip()] == {'opcode': 'hlt', 'operands': 1, 'imm': -1}: #check if mov has 1 register and 1 immideate only 
+            pass
     else:
         # check for variable
         variable_match = re.match(variable_pattern, line)
         if variable_match:
             variable = variable_match.group(1)
             program_dict['variables'][variable] = None
-  
 
-print(program_dict)
+if 'hlt' in program_dict['labels']:
+    temp_var_val = len(program_dict["instructions"]) + len(program_dict['labels'])-2
+
+else:
+    temp_var_val = len(program_dict["instructions"]) + len(program_dict['labels'])-1
+
+#print(temp_var_val)
+x_l = []
+for i in (program_dict['variables'].keys()):
+    x_l.append(i)
+#print(x_l)
+
+for i in range(0,len(x_l)):
+    temp_var_val+=1
+    #print(temp_var_val)
+    temp_var_val_2 = (bin(temp_var_val)[2:])
+    var_val = '{:07b}'.format(temp_var_val)
+    program_dict['variables'][x_l[i]] = var_val
+
+#print(program_dict)
+
+result=[]
+x = 0
+
+
 
 for i in program_dict['instructions'].values():
     if i['opcode'] == 'add': #for add instruction 
       if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-          print("Immideate given for add instruction with 2 registers")
+          print("General Syntax Error")
+          x = 1
       elif i['imm'] == -1 and len(i['operands'])==3:
-          print(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+          result.append(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
       else:
-          print("Invalid format for add instruction")
+          print("General Syntax Error")
+          x = 1
+
 
     if i['opcode'] == 'sub': #for sub inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-              print("Immideate given for sub instruction with 2 registers")
+              print("General Syntax Error")
+              x = 1
         elif i['imm'] == -1 and len(i['operands'])==3:
-            print(Instructions['sub']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+            result.append(Instructions['sub']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
-              print("Invalid format for sub instruction")
+              print("General Syntax Error")
+              x = 1
 
     if i['opcode'] == 'mul': #for mul inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-              print("Immideate given for mul instruction with 2 registers")
+              print("General Syntax Error")
+              x = 1
         elif i['imm'] == -1 and len(i['operands'])==3:
-            print(Instructions['mul']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+            result.append(Instructions['mul']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
-              print("Invalid format for mul instruction") 
+              print("General Syntax Error") 
+              x = 1
 
     if i['opcode'] == 'mov': #for move inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-              print("Immideate given for sub instruction with 2 registers")
+            print("General Syntax Error")
+            x = 1
         elif i['imm'] != -1 and len(i['operands'])==1:
-            print(Instructions['mov']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
+            result.append(Instructions['mov']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         elif i['imm'] == -1 and len(i['operands'])==2:
-            print(Instructions['mov']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
+            result.append(Instructions['mov']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
-              print("Invalid format for mov instruction")
+            print("General Syntax Error")
+            x = 1
+    
+    if i['opcode'] == 'ld': #for load inst.
+        var = i['operands'][1]
+        #print(var)
+        if len(i['operands'])==2:
+            if var in x_l:
+                result.append(Instructions['ld']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
+            else:
+                print("Undefined Variable")
+                x = 1
+        else:
+                print("General Syntax Error")
+                x = 1
 
+    if i['opcode'] == 'st': #for store inst.
+        var = i['operands'][1]
+        #print(var)
+        if len(i['operands'])==2:
+            if var in x_l:
+                result.append(Instructions['st']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
+            else:
+                print("Undefined Variable")
+                x = 1
+        else:
+                print("General Syntax Error")
+
+    if i['opcode'] == 'div': #for divide inst.
+        if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+        elif i['imm'] == -1 and len(i['operands'])==2:
+           result.append(Instructions['div']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
+        else:
+            print("General Syntax Error")
+            x = 1
+      
+
+    if i['opcode'] == 'ls': #for left shift inst.
+        if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+        elif i['imm'] != -1 and len(i['operands'])==1:
+            result.append(Instructions['ls']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
+        else:
+            print("General Syntax Error")
+            x = 1
+
+    if i['opcode'] == 'rs': #for right shift inst.
+        if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+        elif i['imm'] != -1 and len(i['operands'])==1:
+            result.append(Instructions['rs']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
+        else:
+            print("General Syntax Error")
+            x = 1
+
+    if i['opcode'] == 'xor': #for xor inst.
+        if i['imm']!= -1: #immideate error handling done
+              print("General Syntax Error")
+              x = 1
+        elif i['imm'] == -1 and len(i['operands'])==3:
+            result.append(Instructions['xor']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+        else:
+              print("General Syntax Error")
+              x = 1
+
+    if i['opcode'] == 'or': #for or inst.
+        if i['imm']!= -1: #immideate error handling done
+              print("General Syntax Error")
+              x = 1
+        elif i['imm'] == -1 and len(i['operands'])==3:
+            result.append(Instructions['or']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+        else:
+              print("General Syntax Error")   
+
+    if i['opcode'] == 'and': #for and inst.
+       if i['imm']!= -1: #immideate error handling done
+             print("General Syntax Error")
+       elif i['imm'] == -1 and len(i['operands'])==3:
+           result.append(Instructions['and']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+       else:
+             print("General Syntax Error") 
+
+    if i['opcode'] == 'not': #for Invert inst.
+        if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
+            print("General Syntax Error")
+        elif i['imm'] == -1 and len(i['operands'])==2:
+            result.append(Instructions['not']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
+        else:
+            print("General Syntax Error") 
+
+    if i['opcode'] == 'cmp': #for Compare inst.
+        if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
+            print("General Syntax Error")
+        elif i['imm'] == -1 and len(i['operands'])==2:
+            result.append(Instructions['cmp']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
+        else:
+            print("General Syntax Error")    
+
+    if i['opcode'] == 'jmp': #for jump inst.
+        temp_label_val = len(program_dict['instructions'])
+        #print(temp_var_val)
+        temp_label_val_2 = (bin(temp_label_val)[2:])
+        label_val = '{:07b}'.format(temp_label_val)
+        #print(program_dict)
+        #print(var)
+        if len(i['operands'])==1:
+            if var in x_l:
+              result.append(Instructions['jmp']['opcode']+'0'*4+label_val)
+            else:
+                print("Undefined Variable")
+        else:
+                print("General Syntax Errorn")
+
+#    if i['opcode'] == 'jlt': #for jump if less than inst.
+#        var = i['operands'][1]
+#        #print(var)
+#        if len(i['operands'])==2:
+#            if var in x_l:
+#                print(Instructions['jlt']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
+#            else:
+#                print("Undefined Variable")
+#        else:
+#                print("Invalid number of operands for jlt instruction")
+#
+#    if i['opcode'] == 'jgt': #for jump inst.
+#        var = i['operands'][1]
+#        #print(var)
+#        if len(i['operands'])==2:
+#            if var in x_l:
+#                print(Instructions['jgt']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
+#            else:
+#                print("Undefined Variable")
+#        else:
+#                print("Invalid number of operands for jgt instruction")
+#
+#    if i['opcode'] == 'je': #for jump inst.
+#        var = i['operands'][1]
+#        #print(var)
+#        if len(i['operands'])==2:
+#            if var in x_l:
+#                print(Instructions['je']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
+#            else:
+#                print("Undefined Variable")
+#        else:
+#                print("Invalid number of operands for je instruction")
+
+    if program_dict['labels'] == 'hlt': #for halt inst.
+        result.append(Instructions['hlt']['opcode']+'0'*11)
+        x = 1;
+
+if x ==0:
+    for i in result:
+        print(i)

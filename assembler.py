@@ -219,6 +219,7 @@ result=[]
 temp_dict = {}
 x = 0
 y = -1
+var = 0
 
 for i in program_dict['labels'].keys():
     if i == 'hlt':
@@ -385,7 +386,7 @@ for i in program_dict['instructions'].values():
         
         if len(i['operands'])==1:
             t_label = temp_dict[i['operands'][0]]
-            if var in x_l:
+            if i['operands'][0] in program_dict['labels']:
               result.append(Instructions['jmp']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
@@ -397,7 +398,7 @@ for i in program_dict['instructions'].values():
     if i['opcode'] == 'jlt': #for jump if less than inst.
         if len(i['operands'])==1:
             t_label = temp_dict[i['operands'][0]]
-            if var in x_l:
+            if i['operands'][0] in program_dict['labels']:
               result.append(Instructions['jlt']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
@@ -409,8 +410,8 @@ for i in program_dict['instructions'].values():
     if i['opcode'] == 'jgt': #for jump inst.
         t_label = temp_dict[i['operands'][0]]
         if len(i['operands'])==1:
-            if var in x_l:
-              result.append(Instructions['jgt']['opcode']+'0'*4+t_label)
+            if i['operands'][0] in program_dict['labels']:
+                result.append(Instructions['jgt']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
                 x=1
@@ -419,10 +420,10 @@ for i in program_dict['instructions'].values():
                 x=1
 
     if i['opcode'] == 'je': #for jump inst.
+        t_label = temp_dict[i['operands'][0]]
         if len(i['operands'])==1:
-            t_label = temp_dict[i['operands'][0]]
-            if var in x_l:
-              result.append(Instructions['je']['opcode']+'0'*4+t_label)
+            if i['operands'][0] in program_dict['labels']:
+                result.append(Instructions['je']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
                 x=1

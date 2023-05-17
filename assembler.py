@@ -26,8 +26,6 @@ Instructions = {
 
 regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '100', "R5" : '101', "R6" : '110', "FLAGS" : '111'}
 
-import re
-
 # define regex patterns for scanning patterns
 label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):(\s*(.*))?$'
 
@@ -143,6 +141,8 @@ for line in lines:
         instruction = instruction_match.group(1)
         operands = []
         imm = None
+        imm_check = -1
+        new_imm = -1
 
         inst = instruction_match.group(1)
         #print(inst)

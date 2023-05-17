@@ -26,6 +26,8 @@ Instructions = {
 
 regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '100', "R5" : '101', "R6" : '110', "FLAGS" : '111'}
 
+import re
+
 # define regex patterns for scanning patterns
 label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):(\s*(.*))?$'
 
@@ -47,15 +49,23 @@ ih = 0 #instruction halt
 num_gen = 0
 lv = 0 #track record of post : instructions
 
-# open file and read contents
-with open('assembler.txt', 'r') as f:
-    lines = f.readlines()
+#open file and read contents
+#with open('/home/akanksh/Downloads/CO_A_P1/CO_A_P1/assembler.txt', 'r') as f:
+#    lines = f.readlines()
 
-with open('assembler.txt', 'a') as z:
-    z.write('\n')
-    z.close()
+#with open('/home/akanksh/Downloads/CO_A_P1/CO_A_P1/assembler.txt', 'a') as z:
+#    z.write('\n')
+#    z.close()
+
+import sys
+from sys import stdin
+from sys import stdout
+#lines = stdin
+lines = sys.stdin.readlines()
+print(lines)
 
 # loop through lines in file and identify labels, instructions, and variables
+
 for line in lines:
     val_reg = 0 #assumed initially Register has no value
     imm_check = -1 #if no immideate value return -1
@@ -504,7 +514,10 @@ for i in program_dict['instructions'].values():
     if i['opcode'] == 'hlt': #for halt inst.
         result.append(Instructions['hlt']['opcode']+'0'*11)
 
+#print(result)
 #print(program_dict)
 if x ==0:
     for i in result:
-        print(i)
+        sys.stdout.write(i)
+        sys.stdout.write("\n")
+

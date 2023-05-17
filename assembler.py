@@ -62,7 +62,7 @@ from sys import stdin
 from sys import stdout
 #lines = stdin
 lines = sys.stdin.readlines()
-print(lines)
+#print(lines)
 
 # loop through lines in file and identify labels, instructions, and variables
 
@@ -516,8 +516,11 @@ for i in program_dict['instructions'].values():
 
 #print(result)
 #print(program_dict)
+st = ""
 if x ==0:
     for i in result:
-        sys.stdout.write(i)
-        sys.stdout.write("\n")
+        st += i
+        st += ("\n")
 
+#print(st)
+sys.stdout.write(st)

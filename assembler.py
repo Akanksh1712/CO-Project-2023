@@ -219,7 +219,7 @@ result=[]
 temp_dict = {}
 x = 0
 y = -1
-var = 0
+var = None
 
 for i in program_dict['labels'].keys():
     if i == 'hlt':
@@ -238,44 +238,58 @@ for i in program_dict['instructions'].values():
       if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
           print("General Syntax Error")
           x = 1
+          break
       elif i['imm'] == -1 and len(i['operands'])==3:
           result.append(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
       else:
           print("General Syntax Error")
           x = 1
+          break
+          
 
 
     if i['opcode'] == 'sub': #for sub inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
               print("General Syntax Error")
               x = 1
+              break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['sub']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
               print("General Syntax Error")
+              
               x = 1
+              break
 
     if i['opcode'] == 'mul': #for mul inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
               print("General Syntax Error")
+              
               x = 1
+              break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['mul']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
-              print("General Syntax Error") 
+              print("General Syntax Error")
+               
               x = 1
+              break
 
     if i['opcode'] == 'mov': #for move inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
             print("General Syntax Error")
+            
             x = 1
+            break
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['mov']['opcode'][1]+'0'+regs_binary[i['operands'][0]]+i['imm'])
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['mov']['opcode'][0]+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
             print("General Syntax Error")
+            
             x = 1
+            break
     
     if i['opcode'] == 'ld': #for load inst.
         var = i['operands'][1]
@@ -285,10 +299,14 @@ for i in program_dict['instructions'].values():
                 result.append(Instructions['ld']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
             else:
                 print("Undefined Variable")
+                
                 x = 1
+                break
         else:
                 print("General Syntax Error")
+                
                 x = 1
+                break
 
     if i['opcode'] == 'st': #for store inst.
         var = i['operands'][1]
@@ -298,138 +316,190 @@ for i in program_dict['instructions'].values():
                 result.append(Instructions['st']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
             else:
                 print("Undefined Variable")
+                
                 x = 1
+                break
         else:
                 print("General Syntax Error")
+                X=1
+                break
 
     if i['opcode'] == 'div': #for divide inst.
         if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
             print("General Syntax Error")
+            
             x = 1
+            break
         elif i['imm'] == -1 and len(i['operands'])==2:
            result.append(Instructions['div']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
             print("General Syntax Error")
+            
             x = 1
+            break
       
     if i['opcode'] == 'ls': #for left shift inst.
         if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
             print("General Syntax Error")
+            
             x = 1
+            break
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['ls']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print("General Syntax Error")
+            
             x = 1
+            break
 
     if i['opcode'] == 'rs': #for right shift inst.
         if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
             print("General Syntax Error")
+            
             x = 1
+            break
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['rs']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print("General Syntax Error")
+            
             x = 1
+            break
 
     if i['opcode'] == 'xor': #for xor inst.
         if i['imm']!= -1: #immideate error handling done
               print("General Syntax Error")
+              
               x = 1
+              break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['xor']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
               print("General Syntax Error")
+              
               x = 1
+              break
 
     if i['opcode'] == 'or': #for or inst.
         if i['imm']!= -1: #immideate error handling done
               print("General Syntax Error")
+              
               x = 1
+              break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['or']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
               print("General Syntax Error") 
-              x=1  
+              
+              x=1 
+              break 
 
     if i['opcode'] == 'and': #for and inst.
        if i['imm']!= -1: #immideate error handling done
              print("General Syntax Error")
+             
              x=1
+             break
        elif i['imm'] == -1 and len(i['operands'])==3:
            result.append(Instructions['and']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
        else:
              print("General Syntax Error")
-             x=1 
+             
+             x=1
+             break 
 
     if i['opcode'] == 'not': #for Invert inst.
         if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
             print("General Syntax Error")
+            
             x=1
+            break
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['not']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
             print("General Syntax Error")
+            
             x=1 
+            break
 
     if i['opcode'] == 'cmp': #for Compare inst.
         if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
             print("General Syntax Error")
+            
             x=1
+            break
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['cmp']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
             print("General Syntax Error")
-            x=1    
+            
+            x=1
+            break    
 
     if i['opcode'] == 'jmp': #for jump inst.
         
         if len(i['operands'])==1:
             t_label = temp_dict[i['operands'][0]]
-            if i['operands'][0] in program_dict['labels']:
+            if var in x_l:
               result.append(Instructions['jmp']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
+                
                 x=1
+                break
         else:
                 print("General Syntax Error")
+                
                 x=1
+                break
 
     if i['opcode'] == 'jlt': #for jump if less than inst.
         if len(i['operands'])==1:
             t_label = temp_dict[i['operands'][0]]
-            if i['operands'][0] in program_dict['labels']:
+            if var in x_l:
               result.append(Instructions['jlt']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
+                
                 x=1
+                break
         else:
                 print("General Syntax Error")
+                
                 x=1
+                break
 
     if i['opcode'] == 'jgt': #for jump inst.
         t_label = temp_dict[i['operands'][0]]
         if len(i['operands'])==1:
-            if i['operands'][0] in program_dict['labels']:
-                result.append(Instructions['jgt']['opcode']+'0'*4+t_label)
+            if var in x_l:
+              result.append(Instructions['jgt']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
+                
                 x=1
+                break
         else:
                 print("General Syntax Error")
+                
                 x=1
+                break
 
     if i['opcode'] == 'je': #for jump inst.
-        t_label = temp_dict[i['operands'][0]]
         if len(i['operands'])==1:
-            if i['operands'][0] in program_dict['labels']:
-                result.append(Instructions['je']['opcode']+'0'*4+t_label)
+            t_label = temp_dict[i['operands'][0]]
+            if var in x_l:
+              result.append(Instructions['je']['opcode']+'0'*4+t_label)
             else:
                 print("Undefined Label")
+                
                 x=1
+                break
         else:
                 print("General Syntax Error")
+                
                 x=1
+                break
 
     if i['opcode'] == 'hlt': #for halt inst.
         result.append(Instructions['hlt']['opcode']+'0'*11)

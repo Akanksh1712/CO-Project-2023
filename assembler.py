@@ -2,36 +2,72 @@ import re
 import sys
 
 Instructions = {
-    "add": {"opcode": "00000", "operands": 3, "addressing_modes": ["reg", "mem"]},
-    "sub": {"opcode": "00001", "operands": 3, "addressing_modes": ["reg", "mem"]},
-    "mov": {"opcode": ["00011","00010"], "operands": 2, "addressing_modes": ["imm", "reg", "mem"]},
-    #"movi": {"opcode": "00010", "operands": 2, "addressing_modes": ["imm", "reg", "mem"]},
-    "ld": {"opcode": "00100", "operands": 1, "addresing_modes": ["reg", "mem"]},
-    "st": {"opcode": "00101", "operands": 1, "addressing_modes": ["reg", "mem"]},
-    "mul": {"opcode": "00110", "operands": 2, "addressing_modes": ["reg", "mem"]},
-    "div": {"opcode": "00111", "operands": 2, "addressing_modes": ["reg", "mem"]},
-    "rs": {"opcode":"01000", "operands": 1, "addressing_modes": ["reg", "imm"]},
-    "ls":{"opcode":"01001", "operands": 1, "addressing_modes": ["reg", "imm"]},
-   "xor":{ "opcode":"01010", "operands": 3, "addressing_modes": ["reg", "mem"]},
-   "rs":{ "opcode":"01000", "operands": 2, "addressing_modes": ["reg", "mem"]},
-   "or":{ "opcode":"01011", "operands": 3, "addressing_modes": ["reg", "mem"]},
-   "and":{ "opcode":"01100", "operands": 3, "addressing_modes": ["reg", "mem"]},
-   "not":{ "opcode":"01101", "operands": 2, "addressing_modes": ["reg", "mem"]},
-   "cmp":{ "opcode":"01110", "operands": 2, "addressing_modes": ["reg", "mem"]},
-   "jmp": {"opcode": "01111", "operands": 1, "addressing_modes": ["mem"]},
-   "jlt": {"opcode": "11100", "operands": 1, "addressing_modes": ["mem"]},
-   "jgt": {"opcode": "11101", "operands": 1, "addressing_modes": ["mem"]},
-   "je": {"opcode": "11111", "operands": 1, "addressing_modes": ["mem"]},
-   "hlt": {"opcode": "11010", "operands": 1, "addressing_modes": []}
+    "add": {"opcode": "00000"},
+    "sub": {"opcode": "00001"},
+    "mov": {"opcode": ["00011","00010"]},
+    "ld":  {"opcode": "00100"},
+    "st":  {"opcode": "00101"},
+    "mul": {"opcode": "00110"},
+    "div": {"opcode": "00111"},
+    "rs":  {"opcode":"01000"},
+    "ls":  {"opcode":"01001"},
+   "xor":  {"opcode":"01010"},
+   "rs":   {"opcode":"01000"},
+   "or":   {"opcode":"01011"},
+   "and":  { "opcode":"01100"},
+   "not":  {"opcode":"01101"},
+   "cmp":  {"opcode":"01110"},
+   "jmp":  {"opcode": "01111"},
+   "jlt":  {"opcode": "11100"},
+   "jgt":  {"opcode": "11101"},
+   "je":   {"opcode": "11111"},
+   "hlt":  {"opcode": "11010"}
 }
 
 regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '100', "R5" : '101', "R6" : '110', "FLAGS" : '111'}
 
 # define regex patterns for scanning patterns
-#label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):(\s*(.*))?$'
+#label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):(\s*(.*))?$' 
 label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):(\s*(.*))$'
 l_pattern = r'^\s*end:\s*hlt$'
 
+instruction_pattern = r'^\s*(hlt|ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp)\s+'
+instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
+instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
+instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
+instruction_pattern += r'(\s+(\$[0-99]{1,7}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*\n?$'
+
+variable_pattern = r'^\s*var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$'
+
+# initialize dictionary for storing labels, instructions, and variables
+program_dict = {'labels': {}, 'instructions': {}, 'variables': {}}
+
+#temp values
+ll = 0 #label lines
+lh = 0 #label halt
+ih = 0 #instruction halt
+num_gen = -1
+lv = 0 #track record of post : instructions
+lb = 0
+space_tab = "" #track spaces and tabs for label inst
+temp_lab = None
+lab_det = 0
+lab_inst_count = 0
+z = 0 #count lines of label inst
+t_lab = 0 #temp value for checking if any label before instructions
+num_zero = 0
+temp = None
+program_counter = 0
+temp_dict = {}
+
+#defining helper functions
+
+def dec_to_bin(num):
+    new_num = '{:07b}'.format(num) #padding immideate to 7 bits
+    return new_num
+
+def bin_to_dec(binary):
+    return int(binary,2)
 
 def check_label(operation):
     x = ""
@@ -53,52 +89,15 @@ def check_label(operation):
         x_temp = [0,"",0]
     return x_temp
 
-#print(check_label("lab:	add R3 R2 R1"))
-
-instruction_pattern = r'^\s*(hlt|ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp)\s+'
-instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
-instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
-instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
-instruction_pattern += r'(\s+(\$[0-99]{1,7}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*\n?$'
-#instruction_pattern = instruction_pattern.replace(' ', r'\s')
-
-variable_pattern = r'^\s*var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$'
-
-# initialize dictionary for storing labels, instructions, and variables
-program_dict = {'labels': {}, 'instructions': {}, 'variables': {}}
-
-#temp values
-ll = 0 #label lines
-lh = 0 #label halt
-ih = 0 #instruction halt
-num_gen = -1
-lv = 0 #track record of post : instructions
-space_tab = "" #track spaces and tabs for label inst
-temp_lab = None
-lab_det = 0
-lab_inst_count = 0
-z = 0 #count lines of label inst
-t_lab = 0 #temp value for checking if any label before instructions
-num_zero = 0
-
 
 #open file and read contents
-#with open('/home/akanksh/Downloads/assembler.txt', 'r') as f:
-#    lines = f.readlines()
+with open('/home/akanksh/Downloads/assembler.txt', 'r') as f:
+    lines = f.readlines()
 
 #lines = []
 #for kx in sys.stdin:
 #    lines.append(kx)
 lines = sys.stdin.readlines()
-#print(lines)
-#with open('/home/akanksh/Downloads/assembler.txt', 'a') as z:
-#    z.write('\n')
-#    z.close()
-
-#from sys import stdin
-#from sys import stdout
-##lines = stdin
-#lines = sys.stdin.readlines()
 #print(lines)
 
 # loop through lines in file and identify labels, instructions, and variables
@@ -121,28 +120,10 @@ for line in lines:
         space_tab = temp[1]  
         inst_label = temp[2]
 
-        #print(label)
+        temp_dict[label] = dec_to_bin(program_counter)
         #print(space_tab)
         #print(inst_label)
-        #print(program_dict['labels'][label])
-
-        #if len(program_dict['instructions'].keys()) - lv == 0:
-        #    print("hi")
-        #    program_dict['labels'][label] = {'new_val' : num_gen}
-        #    num_gen+=1
         lab_det = 1
-
-
-        #label = label_match.group(1)
-        #print(label)
-#
-        #temp_lab = label
-        ##print(temp_lab)
-        #inst_label = label_match.group(3).strip()
-#
-        #line_temp = line.split(':')
-        #space_tab = ((len(label)+1)*" ") + ((line_temp[1].count('\t'))*'\t')
-        #print(len(space_count))
 
         #print(inst_label)
         if inst_label == 'hlt':
@@ -157,6 +138,7 @@ for line in lines:
         
         instruction_match = re.match(instruction_pattern, inst_label)
         if instruction_match:
+            program_counter += 1
             instruction = instruction_match.group(1)
             operands = []
             imm = None
@@ -176,35 +158,16 @@ for line in lines:
                 if operand:
                     if '$' in operand[1:].strip():
                         imm = int(operand[2:])
-                        bin_imm = (bin(imm)[2:]) #converting num to binary
-                        new_imm = '{:07b}'.format(imm) #padding immideate to 7 bits
+                        #bin_imm = (bin(imm)[2:]) #converting num to binary
+                        new_imm = dec_to_bin(imm) #padding immideate to 7 bits
                         #applying mov
-                        val_reg = '{:016b}'.format(imm) #padding register value to 7 bits
+                        val_reg = '{:016b}'.format(imm) #padding register value to 16 bits
                         #print(val_reg)
                         #print(imm)
                         imm_check = new_imm
                     else:
                         operands.append(operand.strip())
                         #i+=1
-
-            #if new_imm == 0:
-            #    program_dict['labels'][label]['label_instructions'] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}
-            #else:
-            #    program_dict['instructions'][line.strip()] = {'opcode': instruction, 'operands': operands, 'imm': imm_check}
-
-            #if program_dict['instructions'][line.strip()] == {'opcode': 'mov', 'operands': operands, 'imm': new_imm}: #check if mov has 1 register and 1 immideate only
-            #    program_dict['instructions'][line.strip()] = {'opcode': 'mov', 'operands': operands, 'imm': new_imm, 'val_reg' : val_reg}
-#
-            #elif program_dict['instructions'][line.strip()] == {'opcode': 'hlt', 'operands': 1, 'imm': -1}: #check if mov has 1 register and 1 immideate only 
-            #    pass
-
-        #if line.strip() in program_dict['labels']:
-        #        program_dict['labels'][num_gen] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}    
-        #        num_gen+=1
-        #else:
-        #    program_dict['labels'][line.strip()] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}
-
-        #program_dict['instructions'][inst_label] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}
 
         if inst_label == 'hlt':
             program_dict['instructions'][inst_label] = {'opcode': 'hlt', 'operands': 0, 'imm': -1}
@@ -223,15 +186,20 @@ for line in lines:
             #print(program_dict['labels'][label])
             num_gen+=1
             program_dict['labels'][label]['new_val'] =num_gen
+            #program_counter += 1 #counting label as line
 
         else:
             program_dict['labels'][label]['new_val'] = -1
 
-        
     else:
         # check for instruction
         instruction_match = re.match(instruction_pattern, line)
         if instruction_match:
+            program_counter += 1
+
+            if line.strip() != line[:-1]: #checking for label instructions with improper spacing
+                lb+=1
+
             instruction = instruction_match.group(1)
             #print(instruction)
             operands = []
@@ -255,14 +223,6 @@ for line in lines:
 
             inst = instruction_match.group(1)
             #print(inst)
-            #if inst == 'hlt':
-            #    #print("yes")
-            #    if ll != 0:
-            #        #print("nno")
-            #        program_dict['labels'][label] = {'value': 1}
-            #        ll = 0
-            #    else:
-            #        ih 
 
             for i in range(2, instruction_match.lastindex+1):
                 operand = instruction_match.group(i)
@@ -270,16 +230,14 @@ for line in lines:
                 if operand:
                     if '$' in operand[1:].strip():
                         imm = int(operand[2:])
-                        bin_imm = (bin(imm)[2:]) #converting num to binary
-                        new_imm = '{:07b}'.format(imm) #padding immideate to 7 bits
+                        new_imm = dec_to_bin(imm) #padding immideate to 7 bits
                         #applying mov
-                        val_reg = '{:016b}'.format(imm) #padding register value to 7 bits
+                        val_reg = '{:016b}'.format(imm) #padding register value to 16 bits
                         #print(val_reg)
                         #print(imm)
                         imm_check = new_imm
                     else:
                         operands.append(operand.strip())
-                        #i+
 
             if label_match:
                 program_dict['labels'][label]['label_instructions'] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}
@@ -319,52 +277,31 @@ temp_var_val -= lv
 for i in range(0,len(x_l)):
     temp_var_val+=1
     #print(temp_var_val)
-    temp_var_val_2 = (bin(temp_var_val)[2:])
-    var_val = '{:07b}'.format(temp_var_val)
+    #temp_var_val_2 = (bin(temp_var_val)[2:])
+    var_val = dec_to_bin(temp_var_val)
     program_dict['variables'][x_l[i]] = var_val
 #print(num_gen)
 #print(program_dict)
+#print(temp_dict)
 
 result=[]
-temp_dict = {}
 x = 0
 y = num_gen
 var = 0
-#print(program_dict['labels']['l1']['new_val'])
+lab_0_val = 0 #to count number of labels before instructions
 
-for i in program_dict['labels'].keys():
+#Error Handling
+for i in program_dict['instructions'].values():
+    if i['opcode'] == 'hlt':
+        y = 0
+        break
+    y = 2
     
-    #print(i['new_val'])
-    #print(program_dict['labels'][i].keys())
-
-    if i == 'hlt':
-        program_dict['instructions'][i] = {'opcode' : 'hlt'}
-        #del program_dict['labels'][i]
-
-    #if program_dict['labels'][i] == 1:
-    #    print("yes")
-
-    elif program_dict['labels'][i]['new_val'] == 0:
-        t_val = program_dict['labels'][i]['new_val']
-        y = t_val
-        t_val_2 = (bin(t_val)[2:])
-        t_val = '{:07b}'.format(t_val)
-        temp_dict[i] = t_val
-
-    else:
-        #print(lab_inst_count)
-        #print(lv)
-        #print(num_gen)
-        #print(y)
-        #print(len(program_dict['instructions']))
-        temp_label_val = len(program_dict['instructions']) - (lab_inst_count+lv) + y
-        temp_label_val_2 = (bin(temp_label_val)[2:])
-        label_val = '{:07b}'.format(temp_label_val)
-        temp_dict[i] = label_val
-        y+=2
-#print(temp_dict)
+if y == 2:
+    print("Missing hlt instruction")
 
 for i in program_dict['instructions'].values():
+    
     if i['opcode'] == 'add': #for add instruction 
       if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
           print("General Syntax Error")
@@ -553,7 +490,7 @@ for i in program_dict['instructions'].values():
                     break
                 else:
                     x=1
-
+                    
             if x ==1:
                 print("Undefined Label")
                 break
@@ -573,6 +510,7 @@ for i in program_dict['instructions'].values():
                     break
                 else:
                     x=1
+                    
 
             if x ==1:
                 print("Undefined Label")
@@ -594,6 +532,7 @@ for i in program_dict['instructions'].values():
                     break
                 else:
                     x=1
+                    
 
             if x ==1:
                 print("Undefined Label")
@@ -612,8 +551,10 @@ for i in program_dict['instructions'].values():
                     result.append(Instructions['je']['opcode']+'0'*4+temp_dict[i['operands'][0]])
                     x = 0
                     break
+                    
                 else:
                     x=1
+  
 
             if x ==1:
                 print("Undefined Label")
@@ -627,31 +568,7 @@ for i in program_dict['instructions'].values():
     if i['opcode'] == 'hlt': #for halt inst.
         result.append(Instructions['hlt']['opcode']+'0'*11)
 
-#print(result)
-#print(program_dict)
-#if x ==0:
-#    for i in result:
-#        print(i)
-
-#result.append('1101000000000000')
-#st = ''
-#if x == 0:
-#    for i in result:
-#        st += i
-#        st += '\n'
-#        
-#s=len(st)
-#st=st[0:s-1]        
-#print(st)
-#if x == 0:
-#    for i in range(len(result)):
-#        l = result[i].strip()
-#        if i!=len(result)-1:
-#            sys.stdout.write(l+'\n')
-#        else:
-#            sys.stdout.write(l)
-
-if x == 0:
+if x == 0 and y == 0:
     for i in range(len(result)):
         l = result[i].strip()
         if i!=len(result)-1:

@@ -39,6 +39,9 @@ instruction_pattern += r'(\s+(\$[0-99]{1,7}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*\n?$'
 
 variable_pattern = r'^\s*var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$'
 
+#patterns for error handling
+err_inst_pattern = r"\b\s*(hlt|ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp)\s*\b"
+
 # initialize dictionary for storing labels, instructions, and variables
 program_dict = {'labels': {}, 'instructions': {}, 'variables': {}}
 
@@ -59,6 +62,10 @@ num_zero = 0
 temp = None
 program_counter = 0
 temp_dict = {}
+x = 0 #check for error
+line_check = 0 #count number of lines
+label_check = 0 #count number of lines of label
+inst_check = 0 #count number of lines of instructions
 
 #defining helper functions
 
@@ -105,17 +112,41 @@ lines[-1]=lines[-1]+'\n'+'\n'
 #print(lines)
 for line in lines:
     #print(line)
+    line_check += 1
+    label_match = re.match(label_pattern, line)
+    label_new_match = re.match(l_pattern,line)
+    temp = check_label(line)
+
+    #Error Handling
+    err_inst_match = re.match(err_inst_pattern,line)
+    instruction_match = re.match(instruction_pattern, line)
+    variable_match = re.match(variable_pattern, line)
+
+    if variable_match:
+        if label_check != 0 or inst_check != 0:
+            print(f"Variables not declared at the beginning at line {line_check}")
+            x = 1
+            break
+
+    elif err_inst_match:
+        if instruction_match == None:
+            print(f"Typos in instruction name or register name in line {line_check}")
+            x = 1
+            break
+        
+    elif temp[1] == "":
+        if instruction_match == None:
+            if variable_match == None:
+                #print(line)
+                print(f"General Syntax Error in line {line_check}")
+                x = 1
+                break
+
     val_reg = 0 #assumed initially Register has no value
     imm_check = -1 #if no immideate value return -1
 
-    temp = check_label(line)
-    #print(temp)
-    # check for label
-    label_match = re.match(label_pattern, line)
-    label_new_match = re.match(l_pattern,line)
-    #print(label_new_match)
-
     if temp[1] != "":
+        label_check += 1
         label = temp[0] 
         space_tab = temp[1]  
         inst_label = temp[2]
@@ -131,7 +162,7 @@ for line in lines:
         else:
             ll = 1
         lab_inst = [inst_label]
-        program_dict['labels'][label] = {'label_instructions': lab_inst,'spaces_or_tabs' : space_tab}
+        program_dict['labels'][label] = {'label_instructions': lab_inst,'spaces_or_tabs' : space_tab, 'line' : line_check}
 
         if t_lab == 1:
             program_dict['labels'][label] = {'in_val' : 1}
@@ -158,6 +189,10 @@ for line in lines:
                 if operand:
                     if '$' in operand[1:].strip():
                         imm = int(operand[2:])
+                        if imm > 127:
+                            print(f"Illegal Immediate values (more than 7 bits) in line {line_check}")
+                            x = 1
+                            break        
                         #bin_imm = (bin(imm)[2:]) #converting num to binary
                         new_imm = dec_to_bin(imm) #padding immideate to 7 bits
                         #applying mov
@@ -170,15 +205,15 @@ for line in lines:
                         #i+=1
 
         if inst_label == 'hlt':
-            program_dict['instructions'][inst_label] = {'opcode': 'hlt', 'operands': 0, 'imm': -1}
+            program_dict['instructions'][inst_label] = {'opcode': 'hlt', 'operands': 0, 'imm': -1,'line' : line_check}
             lv+=1
 
         elif inst_label in program_dict['instructions']:
-            program_dict['instructions'][num_gen] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}
+            program_dict['instructions'][num_gen] = {'opcode': instruction, 'operands': operands, 'imm': new_imm,'line' : line_check}
             num_gen+=1
             lv+=1
         else:
-            program_dict['instructions'][inst_label] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}
+            program_dict['instructions'][inst_label] = {'opcode': instruction, 'operands': operands, 'imm': new_imm,'line' : line_check}
             lv+=1
 
         if len(program_dict['instructions'].keys()) - lv == 0:
@@ -195,12 +230,19 @@ for line in lines:
         # check for instruction
         instruction_match = re.match(instruction_pattern, line)
         if instruction_match:
+            inst_check += 1
             program_counter += 1
 
             if line.strip() != line[:-1]: #checking for label instructions with improper spacing
                 lb+=1
 
             instruction = instruction_match.group(1)
+
+            #checking halt for last instruction
+            if instruction == "hlt":
+                if line_check != len(lines):
+                    print("hlt not being used as the last instruction")
+
             #print(instruction)
             operands = []
             imm = None
@@ -230,6 +272,11 @@ for line in lines:
                 if operand:
                     if '$' in operand[1:].strip():
                         imm = int(operand[2:])
+                        if imm > 127:
+                            print(f"Illegal Immediate values (more than 7 bits) in line {line_check}")
+                            x = 1
+                            break
+            
                         new_imm = dec_to_bin(imm) #padding immideate to 7 bits
                         #applying mov
                         val_reg = '{:016b}'.format(imm) #padding register value to 16 bits
@@ -240,19 +287,19 @@ for line in lines:
                         operands.append(operand.strip())
 
             if label_match:
-                program_dict['labels'][label]['label_instructions'] = {'opcode': instruction, 'operands': operands, 'imm': new_imm}
+                program_dict['labels'][label]['label_instructions'] = {'opcode': instruction, 'operands': operands, 'imm': new_imm,'line' : line_check}
             else:
                 if line.strip() in program_dict['instructions']:
-                    program_dict['instructions'][num_gen] = {'opcode': instruction, 'operands': operands, 'imm': imm_check}    
+                    program_dict['instructions'][num_gen] = {'opcode': instruction, 'operands': operands, 'imm': imm_check,'line' : line_check}    
                     num_gen+=1
 
                 else:
-                    program_dict['instructions'][line.strip()] = {'opcode': instruction, 'operands': operands, 'imm': imm_check}
+                    program_dict['instructions'][line.strip()] = {'opcode': instruction, 'operands': operands, 'imm': imm_check,'line' : line_check}
 
-            if program_dict['instructions'][line.strip()] == {'opcode': 'mov', 'operands': operands, 'imm': new_imm}: #check if mov has 1 register and 1 immideate only
-                program_dict['instructions'][line.strip()] = {'opcode': 'mov', 'operands': operands, 'imm': new_imm, 'val_reg' : val_reg}
+            if program_dict['instructions'][line.strip()] == {'opcode': 'mov', 'operands': operands, 'imm': new_imm,'line' : line_check}: #check if mov has 1 register and 1 immideate only
+                program_dict['instructions'][line.strip()] = {'opcode': 'mov', 'operands': operands, 'imm': new_imm, 'val_reg' : val_reg,'line' : line_check}
 
-            elif program_dict['instructions'][line.strip()] == {'opcode': 'hlt', 'operands': 1, 'imm': -1}: #check if mov has 1 register and 1 immideate only 
+            elif program_dict['instructions'][line.strip()] == {'opcode': 'hlt', 'operands': 1, 'imm': -1,'line' : line_check}: #check if mov has 1 register and 1 immideate only 
                 pass
         else:
             # check for variable
@@ -281,16 +328,16 @@ for i in range(0,len(x_l)):
     var_val = dec_to_bin(temp_var_val)
     program_dict['variables'][x_l[i]] = var_val
 #print(num_gen)
-#print(program_dict)
+#print(program_dict,"\n")
 #print(temp_dict)
 
 result=[]
-x = 0
 y = num_gen
 var = 0
 lab_0_val = 0 #to count number of labels before instructions
 
 #Error Handling
+
 for i in program_dict['instructions'].values():
     if i['opcode'] == 'hlt':
         y = 0
@@ -301,46 +348,49 @@ if y == 2:
     print("Missing hlt instruction")
 
 for i in program_dict['instructions'].values():
+
+    if x == 1:
+        break
     
     if i['opcode'] == 'add': #for add instruction 
       if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-          print("General Syntax Error")
+          print(f"General Syntax Error in line {i['line']}")
           x = 1
           break
       elif i['imm'] == -1 and len(i['operands'])==3:
           result.append(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
       else:
-          print("General Syntax Error")
+          print(f"General Syntax Error in line {i['line']}")
           x = 1
           break
 
     if i['opcode'] == 'sub': #for sub inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-              print("General Syntax Error")
+              print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['sub']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
-              print("General Syntax Error")
+              print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
 
     if i['opcode'] == 'mul': #for mul inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-              print("General Syntax Error")
+              print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['mul']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
-              print("General Syntax Error") 
+              print(f"General Syntax Error in line {i['line']}") 
               x = 1
               break
 
     if i['opcode'] == 'mov': #for move inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
         elif i['imm'] != -1 and len(i['operands'])==1:
@@ -348,7 +398,7 @@ for i in program_dict['instructions'].values():
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['mov']['opcode'][0]+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
     
@@ -359,11 +409,11 @@ for i in program_dict['instructions'].values():
             if var in x_l:
                 result.append(Instructions['ld']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
             else:
-                print("Undefined Variable")
+                print(f"Use of undefined variables in line {i['line']}")
                 x = 1
                 break
         else:
-                print("General Syntax Error")
+                print(f"General Syntax Error in line {i['line']}")
                 x = 1
                 break
 
@@ -374,23 +424,23 @@ for i in program_dict['instructions'].values():
             if var in x_l:
                 result.append(Instructions['st']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
             else:
-                print("Undefined Variable")
+                print(f"Use of undefined variables in line {i['line']}")
                 x = 1
                 break
         else:
-                print("General Syntax Error")
+                print(f"General Syntax Error in line {i['line']}")
                 x =1
                 break
 
     if i['opcode'] == 'div': #for divide inst.
         if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
         elif i['imm'] == -1 and len(i['operands'])==2:
            result.append(Instructions['div']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
       
@@ -402,79 +452,79 @@ for i in program_dict['instructions'].values():
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['ls']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
 
     if i['opcode'] == 'rs': #for right shift inst.
         if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['rs']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
 
     if i['opcode'] == 'xor': #for xor inst.
         if i['imm']!= -1: #immideate error handling done
-              print("General Syntax Error")
+              print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['xor']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
-              print("General Syntax Error")
+              print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
 
     if i['opcode'] == 'or': #for or inst.
         if i['imm']!= -1: #immideate error handling done
-              print("General Syntax Error")
+              print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['or']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
-              print("General Syntax Error") 
+              print(f"General Syntax Error in line {i['line']}") 
               x=1  
               break
 
     if i['opcode'] == 'and': #for and inst.
        if i['imm']!= -1: #immideate error handling done
-             print("General Syntax Error")
+             print(f"General Syntax Error in line {i['line']}")
              x=1
              break
        elif i['imm'] == -1 and len(i['operands'])==3:
            result.append(Instructions['and']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
        else:
-             print("General Syntax Error")
+             print(f"General Syntax Error in line {i['line']}")
              x=1 
              break
 
     if i['opcode'] == 'not': #for Invert inst.
         if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x=1
             break
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['not']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x=1 
             break
 
     if i['opcode'] == 'cmp': #for Compare inst.
         if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x=1
             break
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['cmp']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
-            print("General Syntax Error")
+            print(f"General Syntax Error in line {i['line']}")
             x=1    
             break
 
@@ -492,11 +542,11 @@ for i in program_dict['instructions'].values():
                     x=1
                     
             if x ==1:
-                print("Undefined Label")
+                print(f"Use of undefined labels in line {i['line']}")
                 break
                     
         else:
-                print("General Syntax Error")
+                print(f"General Syntax Error in line {i['line']}")
                 x=1
                 break
 
@@ -513,11 +563,11 @@ for i in program_dict['instructions'].values():
                     
 
             if x ==1:
-                print("Undefined Label")
+                print(f"Use of undefined labels in line {i['line']}")
                 break
 
         else:
-             print("General Syntax Error")
+             print(f"General Syntax Error in line {i['line']}")
              x=1
              break
 
@@ -535,11 +585,11 @@ for i in program_dict['instructions'].values():
                     
 
             if x ==1:
-                print("Undefined Label")
+                print(f"Use of undefined labels in line {i['line']}")
                 break
 
         else:
-             print("General Syntax Error")
+             print(f"General Syntax Error in line {i['line']}")
              x=1
              break
 
@@ -557,11 +607,11 @@ for i in program_dict['instructions'].values():
   
 
             if x ==1:
-                print("Undefined Label")
+                print(f"Use of undefined labels in line {i['line']}")
                 break
 
         else:
-             print("General Syntax Error")
+             print(f"General Syntax Error in line {i['line']}")
              x=1
              break
 
@@ -569,9 +619,15 @@ for i in program_dict['instructions'].values():
         result.append(Instructions['hlt']['opcode']+'0'*11)
 
 if x == 0 and y == 0:
-    for i in range(len(result)):
+    if len(result)<127:
+        length = len(result)
+    else:
+        length = 128
+    for i in range(length): # The assembler can write less than or equal to 128 lines.
         l = result[i].strip()
         if i!=len(result)-1:
             sys.stdout.write(l+'\n')
         else:
             sys.stdout.write(l)
+
+

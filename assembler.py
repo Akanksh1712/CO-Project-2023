@@ -353,22 +353,35 @@ for i in program_dict['instructions'].values():
         break
     
     if i['opcode'] == 'add': #for add instruction 
-      if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
-          print(f"General Syntax Error in line {i['line']}")
-          x = 1
-          break
-      elif i['imm'] == -1 and len(i['operands'])==3:
-          result.append(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
-      else:
-          print(f"General Syntax Error in line {i['line']}")
-          x = 1
-          break
+        if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break 
+
+        elif i['imm'] == -1 and len(i['operands'])==3:
+            result.append(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]]) 
+
+        else:
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
 
     if i['opcode'] == 'sub': #for sub inst.
         if i['imm']!= -1 and len(i['operands'])==2: #immideate error handling done
               print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
+        
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['sub']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
@@ -381,6 +394,12 @@ for i in program_dict['instructions'].values():
               print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
+        
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['mul']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
@@ -408,6 +427,12 @@ for i in program_dict['instructions'].values():
         if len(i['operands'])==2:
             if var in x_l:
                 result.append(Instructions['ld']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
+
+            elif i['operands'][1] in program_dict['labels'].keys():
+                print(f"Misuse of labels as variables in line {i['line']}")
+                x = 2
+                break
+
             else:
                 print(f"Use of undefined variables in line {i['line']}")
                 x = 1
@@ -423,6 +448,12 @@ for i in program_dict['instructions'].values():
         if len(i['operands'])==2:
             if var in x_l:
                 result.append(Instructions['st']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
+
+            elif i['operands'][1] in program_dict['labels'].keys():
+                print(f"Misuse of labels as variables in line {i['line']}")
+                x = 2
+                break
+
             else:
                 print(f"Use of undefined variables in line {i['line']}")
                 x = 1
@@ -437,6 +468,12 @@ for i in program_dict['instructions'].values():
             print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] == -1 and len(i['operands'])==2:
            result.append(Instructions['div']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
@@ -449,6 +486,12 @@ for i in program_dict['instructions'].values():
             print("General Syntax Error")
             x = 1
             break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['ls']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
@@ -461,6 +504,12 @@ for i in program_dict['instructions'].values():
             print(f"General Syntax Error in line {i['line']}")
             x = 1
             break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['rs']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
@@ -473,6 +522,12 @@ for i in program_dict['instructions'].values():
               print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
+        
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['xor']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
@@ -485,6 +540,12 @@ for i in program_dict['instructions'].values():
               print(f"General Syntax Error in line {i['line']}")
               x = 1
               break
+        
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] == -1 and len(i['operands'])==3:
             result.append(Instructions['or']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
@@ -493,13 +554,19 @@ for i in program_dict['instructions'].values():
               break
 
     if i['opcode'] == 'and': #for and inst.
-       if i['imm']!= -1: #immideate error handling done
+        if i['imm']!= -1: #immideate error handling done
              print(f"General Syntax Error in line {i['line']}")
              x=1
              break
-       elif i['imm'] == -1 and len(i['operands'])==3:
+       
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+       
+        elif i['imm'] == -1 and len(i['operands'])==3:
            result.append(Instructions['and']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
-       else:
+        else:
              print(f"General Syntax Error in line {i['line']}")
              x=1 
              break
@@ -509,6 +576,12 @@ for i in program_dict['instructions'].values():
             print(f"General Syntax Error in line {i['line']}")
             x=1
             break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['not']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
@@ -521,6 +594,12 @@ for i in program_dict['instructions'].values():
             print(f"General Syntax Error in line {i['line']}")
             x=1
             break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
         elif i['imm'] == -1 and len(i['operands'])==2:
             result.append(Instructions['cmp']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
@@ -538,6 +617,11 @@ for i in program_dict['instructions'].values():
                     result.append(Instructions['jmp']['opcode']+'0'*4+temp_dict[i['operands'][0]])
                     x = 0
                     break
+
+                elif (i['operands'][0]).strip() in program_dict['variables'].keys():
+                    print(f"Misuse of variables as labels in line {i['line']}")
+                    x = 2
+
                 else:
                     x=1
                     
@@ -558,10 +642,14 @@ for i in program_dict['instructions'].values():
                     result.append(Instructions['jlt']['opcode']+'0'*4+temp_dict[i['operands'][0]])
                     x = 0
                     break
+
+                elif (i['operands'][0]).strip() in program_dict['variables'].keys():
+                    print(f"Misuse of variables as labels in line {i['line']}")
+                    x = 2        
+
                 else:
                     x=1
                     
-
             if x ==1:
                 print(f"Use of undefined labels in line {i['line']}")
                 break
@@ -580,10 +668,14 @@ for i in program_dict['instructions'].values():
                     result.append(Instructions['jgt']['opcode']+'0'*4+temp_dict[i['operands'][0]])
                     x = 0
                     break
+                elif (i['operands'][0]).strip() in program_dict['variables'].keys():
+                    print(f"Misuse of variables as labels in line {i['line']}")
+                    x = 2
+                    break
+
                 else:
                     x=1
                     
-
             if x ==1:
                 print(f"Use of undefined labels in line {i['line']}")
                 break
@@ -601,11 +693,14 @@ for i in program_dict['instructions'].values():
                     result.append(Instructions['je']['opcode']+'0'*4+temp_dict[i['operands'][0]])
                     x = 0
                     break
+
+                elif (i['operands'][0]).strip() in program_dict['variables'].keys():
+                    print(f"Misuse of variables as labels in line {i['line']}")
+                    x = 2
                     
                 else:
                     x=1
   
-
             if x ==1:
                 print(f"Use of undefined labels in line {i['line']}")
                 break
@@ -620,14 +715,12 @@ for i in program_dict['instructions'].values():
 
 if x == 0 and y == 0:
     if len(result)<127:
-        length = len(result)
+    	length = len(result)
     else:
-        length = 128
+        length = 127
     for i in range(length): # The assembler can write less than or equal to 128 lines.
         l = result[i].strip()
         if i!=len(result)-1:
             sys.stdout.write(l+'\n')
         else:
             sys.stdout.write(l)
-
-

@@ -242,6 +242,8 @@ for line in lines:
             if instruction == "hlt":
                 if line_check != len(lines):
                     print("hlt not being used as the last instruction")
+                    x = 1
+                    break
 
             #print(instruction)
             operands = []
@@ -336,6 +338,7 @@ y = num_gen
 var = 0
 lab_0_val = 0 #to count number of labels before instructions
 
+
 #Error Handling
 
 for i in program_dict['instructions'].values():
@@ -364,7 +367,15 @@ for i in program_dict['instructions'].values():
             break 
 
         elif i['imm'] == -1 and len(i['operands'])==3:
-            result.append(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]]) 
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['add']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+    
 
         else:
             print(f"General Syntax Error in line {i['line']}")
@@ -383,6 +394,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] == -1 and len(i['operands'])==3:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
             result.append(Instructions['sub']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
               print(f"General Syntax Error in line {i['line']}")
@@ -401,6 +419,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] == -1 and len(i['operands'])==3:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break    
             result.append(Instructions['mul']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
               print(f"General Syntax Error in line {i['line']}") 
@@ -415,7 +440,15 @@ for i in program_dict['instructions'].values():
         elif i['imm'] != -1 and len(i['operands'])==1:
             result.append(Instructions['mov']['opcode'][1]+'0'+regs_binary[i['operands'][0]]+i['imm'])
         elif i['imm'] == -1 and len(i['operands'])==2:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break    
             result.append(Instructions['mov']['opcode'][0]+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
+            
         else:
             print(f"General Syntax Error in line {i['line']}")
             x = 1
@@ -425,6 +458,15 @@ for i in program_dict['instructions'].values():
         var = i['operands'][1]
         #print(var)
         if len(i['operands'])==2:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS",var]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+
+            if x == 1:
+                break
+
             if var in x_l:
                 result.append(Instructions['ld']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
 
@@ -446,6 +488,15 @@ for i in program_dict['instructions'].values():
         var = i['operands'][1]
         #print(var)
         if len(i['operands'])==2:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS",var]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            
+            if x == 1:
+                break
+
             if var in x_l:
                 result.append(Instructions['st']['opcode']+'0'+regs_binary[i['operands'][0]]+program_dict['variables'][var])
 
@@ -475,7 +526,15 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] == -1 and len(i['operands'])==2:
-           result.append(Instructions['div']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+
+            if x == 1:
+                break
+            result.append(Instructions['div']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
             print(f"General Syntax Error in line {i['line']}")
             x = 1
@@ -493,6 +552,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] != -1 and len(i['operands'])==1:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
             result.append(Instructions['ls']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print(f"General Syntax Error in line {i['line']}")
@@ -511,6 +577,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] != -1 and len(i['operands'])==1:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
             result.append(Instructions['rs']['opcode']+'0'+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print(f"General Syntax Error in line {i['line']}")
@@ -529,6 +602,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] == -1 and len(i['operands'])==3:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
             result.append(Instructions['xor']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
               print(f"General Syntax Error in line {i['line']}")
@@ -547,6 +627,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] == -1 and len(i['operands'])==3:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
             result.append(Instructions['or']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
               print(f"General Syntax Error in line {i['line']}") 
@@ -565,7 +652,14 @@ for i in program_dict['instructions'].values():
             break
        
         elif i['imm'] == -1 and len(i['operands'])==3:
-           result.append(Instructions['and']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['and']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
         else:
              print(f"General Syntax Error in line {i['line']}")
              x=1 
@@ -583,6 +677,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] == -1 and len(i['operands'])==2:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
             result.append(Instructions['not']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
             print(f"General Syntax Error in line {i['line']}")
@@ -601,6 +702,13 @@ for i in program_dict['instructions'].values():
             break
 
         elif i['imm'] == -1 and len(i['operands'])==2:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
             result.append(Instructions['cmp']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
         else:
             print(f"General Syntax Error in line {i['line']}")
@@ -724,6 +832,5 @@ if x == 0 and y == 0:
             sys.stdout.write(l+'\n')
         else:
             sys.stdout.write(l)
-
 
 

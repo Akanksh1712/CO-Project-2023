@@ -21,7 +21,10 @@ Instructions = {
    "jlt":  {"opcode": "11100"},
    "jgt":  {"opcode": "11101"},
    "je":   {"opcode": "11111"},
-   "hlt":  {"opcode": "11010"}
+   "hlt":  {"opcode": "11010"},
+   "addf" : {"opcode" : "10000"},
+   "subf" : {"opcode" : "10001"},
+   "movf" : {"opcode" : "10010"}
 }
 
 regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '100', "R5" : '101', "R6" : '110', "FLAGS" : '111'}
@@ -31,11 +34,13 @@ regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '10
 label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):(\s*(.*))$'
 l_pattern = r'^\s*end:\s*hlt$'
 
-instruction_pattern = r'^\s*(hlt|ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp)\s+'
+instruction_pattern = r'^\s*(hlt|ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp|movf|addf|subf)\s+'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
-instruction_pattern += r'(\s+(\$[0-99]{1,7}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*\n?$'
+instruction_pattern += r'(\s+(\$[0-9]+\.[0-9]+|\$[0-9]+|\$[1-9][0-9]{0,6}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*\n?$'
+#instruction_pattern += r'(\s+(\$[0-99]{1,7}|[a-zA-Z_][a-zA-Z0-9_]*))?\s*\n?$'
+
 
 variable_pattern = r'^\s*var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$'
 
@@ -95,6 +100,47 @@ def check_label(operation):
     else:
         x_temp = [0,"",0]
     return x_temp
+
+
+def float_to_bin(y):
+    x= bin(int(y))[2:]#integer
+
+    f=y-int(y) #mantissa
+
+    b=x+"."
+
+    while(1):
+        if(len(b)<8):
+            f=f*2
+            if(f//1==1):
+                b+='1'
+                f-=1
+            else:
+                b+='0'
+
+        else:    
+            break
+
+
+    #print(b)
+    temp=0
+
+    for i in range(len(b)):
+        
+        if(b[i]=='.'):
+            
+
+            #print(i)
+            b=b[(1):i]+b[(i+1):]
+            temp=i-1
+            break
+        
+
+    exp=bin(3+temp)[2:]
+    exp=(3-len(exp))*'0'+exp
+    num=exp+b[0:5]
+    #print(num)
+    return num
 
 
 #open file and read contents
@@ -188,18 +234,27 @@ for line in lines:
                 operand = instruction_match.group(i)
                 if operand:
                     if '$' in operand[1:].strip():
-                        imm = int(operand[2:])
-                        if imm > 127:
-                            print(f"Illegal Immediate values (more than 7 bits) in line {line_check}")
-                            x = 1
-                            break        
-                        #bin_imm = (bin(imm)[2:]) #converting num to binary
-                        new_imm = dec_to_bin(imm) #padding immideate to 7 bits
-                        #applying mov
-                        val_reg = '{:016b}'.format(imm) #padding register value to 16 bits
-                        #print(val_reg)
-                        #print(imm)
-                        imm_check = new_imm
+                        if float(operand[2:]) // 1 != float(operand[2:]):
+                            if float(operand[2:]) < 31.5:
+                                imm_check = float_to_bin(float(operand[2:]))
+                            else:
+                                print(f"The given Immideate value can't be represented as 8 bit Representation in line {line_check}")
+                                x =1
+                                break
+                        
+                        else:
+                            imm = int(operand[2:])
+                            if imm > 127:
+                                print(f"Illegal Immediate values (more than 7 bits) in line {line_check}")
+                                x = 1
+                                break        
+                            #bin_imm = (bin(imm)[2:]) #converting num to binary
+                            new_imm = dec_to_bin(imm) #padding immideate to 7 bits
+                            #applying mov
+                            val_reg = '{:016b}'.format(imm) #padding register value to 16 bits
+                            #print(val_reg)
+                            #print(imm)
+                            imm_check = new_imm
                     else:
                         operands.append(operand.strip())
                         #i+=1
@@ -273,18 +328,28 @@ for line in lines:
                 #print(operand)
                 if operand:
                     if '$' in operand[1:].strip():
-                        imm = int(operand[2:])
-                        if imm > 127:
-                            print(f"Illegal Immediate values (more than 7 bits) in line {line_check}")
-                            x = 1
-                            break
-            
-                        new_imm = dec_to_bin(imm) #padding immideate to 7 bits
-                        #applying mov
-                        val_reg = '{:016b}'.format(imm) #padding register value to 16 bits
-                        #print(val_reg)
-                        #print(imm)
-                        imm_check = new_imm
+                        if float(operand[2:]) // 1 != float(operand[2:]):
+                            if float(operand[2:]) < 31.5:
+                                imm_check = float_to_bin(float(operand[2:]))
+                            else:
+                                print(f"The given Immideate value can't be represented as 8 bit Representation in line {line_check}")
+                                x = 1
+                                break
+                            
+                        else:
+                            imm = int(operand[2:])
+
+                            if imm > 127:
+                                print(f"Illegal Immediate values (more than 7 bits) in line {line_check}")
+                                x = 1
+                                break
+                            
+                            new_imm = dec_to_bin(imm) #padding immideate to 7 bits
+                            #applying mov
+                            val_reg = '{:016b}'.format(imm) #padding register value to 16 bits
+                            #print(val_reg)
+                            #print(imm)
+                            imm_check = new_imm
                     else:
                         operands.append(operand.strip())
 
@@ -347,7 +412,7 @@ for i in program_dict['instructions'].values():
         break
     y = 2
     
-if y == 2:
+if y == 2 and x != 1:
     print("Missing hlt instruction")
 
 for i in program_dict['instructions'].values():
@@ -817,6 +882,80 @@ for i in program_dict['instructions'].values():
              print(f"General Syntax Error in line {i['line']}")
              x=1
              break
+        
+    if i['opcode'] == 'addf': #for F_Addition inst.
+        if i['imm']!= -1: #immideate error handling done
+              print(f"General Syntax Error in line {i['line']}")
+              x = 1
+              break
+        
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
+        elif i['imm'] == -1 and len(i['operands'])==3:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['addf']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+        else:
+              print(f"General Syntax Error in line {i['line']}") 
+              x=1  
+              break
+        
+    if i['opcode'] == 'subf': #for F_Subtraction inst.
+        if i['imm']!= -1: #immideate error handling done
+              print(f"General Syntax Error in line {i['line']}")
+              x = 1
+              break
+          
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+        elif i['imm'] == -1 and len(i['operands'])==3:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['subf']['opcode']+'00'+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]]+regs_binary[i['operands'][2]])
+        else:
+              print(f"General Syntax Error in line {i['line']}") 
+              x=1  
+              break
+          
+    if i['opcode'] == 'movf': #for Mov F_Immideate inst.
+        if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+            break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
+        elif i['imm'] != -1 and len(i['operands'])==1:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['movf']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+        else:
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break    
 
     if i['opcode'] == 'hlt': #for halt inst.
         result.append(Instructions['hlt']['opcode']+'0'*11)

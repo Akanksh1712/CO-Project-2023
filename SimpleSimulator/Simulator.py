@@ -50,6 +50,67 @@ def dtb(val):
     bi='0'*s+bi
     return bi
 
+#float to binary
+def ftb(y):
+    x= bin(int(y))[2:]#integer
+
+    f=y-int(y) #mantissa
+
+
+    b=x+"."
+
+
+    while(1):
+        if(len(b)<8):
+            f=f*2
+            if(f//1==1):
+                b+='1'
+                f-=1
+            else:
+                b+='0'
+
+        else:    
+            break
+
+
+    #print(b)
+    temp=0
+
+    for i in range(len(b)):
+        
+        if(b[i]=='.'):
+            
+
+            #print(i)
+            b=b[(1):i]+b[(i+1):]
+            temp=i-1
+            break
+        
+        
+
+    exp=bin(3+temp)[2:]
+    exp=(3-len(exp))*'0'+exp
+    num=exp+b[0:5]
+    #print(num)
+    num=(16-len(num))*'0'+num
+    return num
+
+
+# binary to float
+def btf(y):
+    x=y[0:3]
+    x=btd(x)-3
+
+    y=y[3:]
+
+    f=y[x:]
+    y='1'+y[0:x]
+
+    num=btd(y)
+    for i in range(len(f)):
+        num+=(2**(-i-1))*int(f[i])
+        
+    return num
 # to keep track of number of entries of mem dictionary
 q=0
 
@@ -86,12 +147,19 @@ while (l<q):
         #performing operation
         value= register_file[rs1]+register_file[rs2]
 
-        # store the value in rds
-        register_file[rds]=value
-        if(value>256):
+        
+        if(value>2**16):
             flag_val=3
             temp=register_file["111"]
             register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+            # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
+
 
     
     # subtract
@@ -102,12 +170,18 @@ while (l<q):
         #performing operation
         value= register_file[rs1]-register_file[rs2]
 
-        # store the value in rds
-        register_file[rds]=value
-        if(value>256):
+        
+        if(value<0):
             flag_val=3
             temp=register_file["111"]
             register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
 
 
 
@@ -119,12 +193,18 @@ while (l<q):
         #performing operation
         value= register_file[rs1]*register_file[rs2]
 
-        # store the value in rds
-        register_file[rds]=value
-        if(value>256):
+        
+        if(value>2**16):
             flag_val=3
             temp=register_file["111"]
             register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
 
     #division
     elif(opc=="00001"):
@@ -132,26 +212,77 @@ while (l<q):
         rs1 = s[10:13]
         rs2 = s[13:16]
         #performing operation
-        value= register_file[rs1]/register_file[rs2]
+        value= register_file[rs1]//register_file[rs2]
 
-        # store the value in rds
-        register_file[rds]=value
         
-        if(value>256):
+        
+        if(value>2**16):
             flag_val=3
             temp=register_file["111"]
             register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
+
+    #F_ADDITION
+    elif(opc=="10000"):
+        rds = s[7:10]
+        rs1 = s[10:13]
+        rs2 = s[13:16]
+        #performing operation
+        value= register_file[rs1]+register_file[rs2]
+
+        
+
+      
+        
+        if(value>7.96875):
+            flag_val=3
+            temp=register_file["111"]
+            register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
+    
+    #F_SUBTRACTION
+    elif(opc=="10001"):
+        rds = s[7:10]
+        rs1 = s[10:13]
+        rs2 = s[13:16]
+        #performing operation
+        value= register_file[rs1]-register_file[rs2]
+
+       
+        
+        if(value<0):
+            flag_val=3
+            temp=register_file["111"]
+            register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+            
+        else:
+            # store the value in rds
+            register_file[rds]=value
 
 
 #*********** 2 address format************
 
     # move immediate
-    #rs2 = immediate
     #unsused bit =1
     elif(opc=="00010"):
         rds = s[6:9]
         
-        rs2 = s[9:16]
+        rs2 = s[9:16]#rs2 = immediate
 
         #performing operation
         value= btd(rs2)
@@ -159,6 +290,19 @@ while (l<q):
         # store the value in rds
         register_file[rds]=value
 
+    # move F_immediate
+    #unsused bit =0
+    elif(opc=="10010"):
+        rds = s[5:8]
+        
+        rs2 = s[8:16]#rs2 = floating immediate
+
+        #performing operation
+        value= btf(rs2)
+
+        # store the value in rds
+        register_file[rds]=value
+        
     # move register
     #unsused bit = 5
     elif(opc=="00011"):
@@ -390,14 +534,27 @@ while (l<q):
     for i in register_file.values():
         if(register_file["111"]!=i):
             #print(" "*8, dtb(i),end='')
-            result.append(" "*1)
-            result.append(dtb(i))
+            if(i//1==i):
+                result.append(" "*1)
+                result.append(dtb(i))
+            else:
+                result.append(" "*1)
+                result.append(ftb(i))
+            
+		
+		
+		
+	
         else:
             #print(" "*8, i,end='')
             result.append(" "*1)
             result.append(i)
     #print()
     result.append("\n")
+    
+     # resetted the value of stack over flow
+    if(flag_val==3):
+        register_file["111"]=temp[0:12]+"0"+temp[13:]
     if(br==1):
         break
     

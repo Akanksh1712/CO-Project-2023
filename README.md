@@ -1,9 +1,15 @@
 # CO-Project-2023
 
-The given code is an assembler program written in Python. It reads lines of assembly code and extracts labels, instructions, and variables.
+The provided code represents a sophisticated assembler program implemented in Python. Its purpose is to parse lines of assembly code, extracting essential components such as labels, instructions, and variables.
 
-The code defines a dictionary called "Instructions" that maps each instruction mnemonic to its corresponding opcode, number of operands, and addressing modes. It also defines a dictionary called "regs_binary" that maps register names to their binary representation.
+The code includes a meticulously constructed dictionary, named "Instructions," which serves as a mapping between instruction mnemonics and their corresponding opcodes, the number of operands, and the addressing modes associated with each instruction. Additionally, it encompasses a supplementary dictionary called "regs_binary," which facilitates the conversion of register names into their respective binary representations.
 
-The code uses regular expressions to match different patterns in the assembly code. It checks for labels, instructions, and variables using specific patterns.
+To analyze the assembly code, regular expressions are skillfully employed to identify distinct patterns. These patterns are specifically designed to detect labels, instructions, and variables within the code.
 
-The code initializes a dictionary called "program_dict" to store labels, instructions, and variables. It iterates over the lines of assembly code and tries to extract information from each line.
+Moreover, the code initiates a highly efficient dictionary called "program_dict" to store essential information, including labels, instructions, and variables. It diligently traverses each line of the assembly code, extracting and organizing the pertinent details.
+
+To ensure impeccable performance and enhanced user experience, the assembler has been further augmented with robust error handling capabilities. This noteworthy addition enables the prompt detection and appropriate reporting of any encountered errors.
+
+The code has been ingeniously enhanced to accommodate floating point numbers as well. It now caters to a comprehensive range of floating point numbers, with the upper limit set at 31.5. Furthermore, the assembler effectively verifies the validity of floating point numbers, raising an error message whenever a floating point number is outside the permissible range. Notably, the floating point numbers adhere to a specific format, encompassing the absence of a sign bit, three bits for the exponent, and five bits for the mantissa.
+
+Overall, the code showcases meticulous attention to detail, robust error handling, and comprehensive support for floating point numbers, culminating in a highly professional and advanced assembler program.

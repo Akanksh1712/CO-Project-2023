@@ -155,7 +155,7 @@ with open('/home/akanksh/Downloads/assembler.txt', 'r') as f:
 #lines = []
 #for kx in sys.stdin:
 #    lines.append(kx)
-lines = sys.stdin.readlines()
+#lines = sys.stdin.readlines()
 #print(lines)
 
 # loop through lines in file and identify labels, instructions, and variables
@@ -957,7 +957,7 @@ for i in program_dict['instructions'].values():
                     break
             if x == 1:
                 break
-            result.append(Instructions['movf']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+            result.append(Instructions['movf']['opcode']+"0"+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print(f"General Syntax Error in line {i['line']}")
             x = 1
@@ -982,7 +982,7 @@ for i in program_dict['instructions'].values():
                     break
             if x == 1:
                 break
-            result.append(Instructions['muli']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+            result.append(Instructions['muli']['opcode']+"0"+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print(f"General Syntax Error in line {i['line']}")
             x = 1
@@ -1004,7 +1004,7 @@ for i in program_dict['instructions'].values():
                     break
             if x == 1:
                 break
-            result.append(Instructions['divi']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+            result.append(Instructions['divi']['opcode']+"0"+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print(f"General Syntax Error in line {i['line']}")
             x = 1
@@ -1027,7 +1027,7 @@ for i in program_dict['instructions'].values():
                     break
             if x == 1:
                 break
-            result.append(Instructions['cmpi']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+            result.append(Instructions['cmpi']['opcode']+"0"+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print(f"General Syntax Error in line {i['line']}")
             x = 1
@@ -1050,7 +1050,7 @@ for i in program_dict['instructions'].values():
                     break
             if x == 1:
                 break
-            result.append(Instructions['addi']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+            result.append(Instructions['addi']['opcode']+"0"+regs_binary[i['operands'][0]]+i['imm'])
         else:
             print(f"General Syntax Error in line {i['line']}")
             x = 1

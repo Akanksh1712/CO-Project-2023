@@ -30,4 +30,4 @@ Semantics: This instruction performs the computation reg1 = reg1 + imm. If the c
 Syntax: addi reg1 $imm
 Type: B
 
-Note: Instructions labeled with Type "B" are basic instructions, while the instruction labeled with Type "C" is a control instruction.
+Note: Instructions labeled with Type "B" are Floating Point instructions, while the instruction labeled with Type "C" is a basic instruction (only data movement).

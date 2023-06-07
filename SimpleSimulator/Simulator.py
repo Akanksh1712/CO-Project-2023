@@ -135,12 +135,109 @@ while (l<q):
     rs1=""
     rs2="" #can be an immediate
 
-    # writing all the functions
+    if(opc=="10011"):# muli 10011 divi 10100 cmpi 10101 exch = 10110 addi 10111
+        rds = s[6:9]
+        
+        rs2 = s[9:16]
+        imm=btd(rs2)
+
+        value=register_file[rds]+imm
+
+        if(value>2**16):
+            flag_val=3
+            temp=register_file["111"]
+            register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
+
+    #Divide with immediate
+    elif(opc=="10100"):
+        rds = s[6:9]
+        
+        rs2 = s[9:16]
+        imm=btd(rs2)
+        value=register_file[rs1]//imm
+
+        if(value>2**16):
+            flag_val=3
+            temp=register_file["111"]
+            register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
+
+
+    #compare with immediate
+    elif(opc=="10101"):
+        rds = s[6:9]
+        
+        rs2 = s[9:16]
+        #performing operation
+        val1 = register_file[rds]
+        val2 = btd(rs2)
+
+        #print("**",val1,val2,rds)
+
+        if(val1>val2):
+            temp=register_file["111"]
+            register_file["111"]=temp[0:13]+"010"
+        
+        elif(val1==val2):
+            temp=register_file["111"]
+            register_file["111"]=temp[0:13]+"001"
+        else:
+            temp=register_file["111"]
+            register_file["111"]=temp[0:13]+"100"
+
+    #Exchange registers
+    elif(opc=="10110"):
+        rds = s[10:13]
+        
+        rs2 = s[13:16]
+
+        #performing operation
+        val1 = register_file[rds]
+        val2 = register_file[rs2]
+        register_file[rds]=val2
+        register_file[rs2]=val1
+
+
+    #Add with immediate
+
+    elif(opc=="10111"):
+        rds = s[6:9]
+        
+        rs2 = s[9:16]
+        imm=btd(rs2)
+        value=register_file[rs1]+imm
+
+        if(value>2**16):
+            flag_val=3
+            temp=register_file["111"]
+            register_file["111"]=temp[0:12]+"1"+temp[13:]
+
+             # store the value in rds
+            register_file[rds]=0
+
+        else:
+            # store the value in rds
+            register_file[rds]=value
+
 
     # opcodes with 3 address format
     # unused bits = 2
     #add operation
-    if(opc=="00000"):
+
+    elif(opc=="00000"):
         rds = s[7:10]
         rs1 = s[10:13]
         rs2 = s[13:16]
@@ -159,7 +256,6 @@ while (l<q):
         else:
             # store the value in rds
             register_file[rds]=value
-
 
     
     # subtract

@@ -24,7 +24,12 @@ Instructions = {
    "hlt":  {"opcode": "11010"},
    "addf" : {"opcode" : "10000"},
    "subf" : {"opcode" : "10001"},
-   "movf" : {"opcode" : "10010"}
+   "movf" : {"opcode" : "10010"},
+   "muli" : {"opcode" : "10011"},
+   "divi" : {"opcode" : "10100"},
+   "cmpi" : {"opcode" : "10101"},
+   "ex" : {"opcode" : "10110"},
+   "addi" : {"opcode" : "10111"}
 }
 
 regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '100', "R5" : '101', "R6" : '110', "FLAGS" : '111'}
@@ -34,7 +39,7 @@ regs_binary = {"R0" : '000',"R1" : '001', "R2" : '010', "R3" : '011', "R4" : '10
 label_pattern = r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):(\s*(.*))$'
 l_pattern = r'^\s*end:\s*hlt$'
 
-instruction_pattern = r'^\s*(hlt|ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp|movf|addf|subf)\s+'
+instruction_pattern = r'^\s*(hlt|ld|st|mov|add|sub|mul|div|ls|rs|xor|and|not|jmp|jlt|jgt|je|cmp|movf|addf|subf|addi|muli|divi|cmpi|ex)\s+'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
 instruction_pattern += r'(R[0-6]|FLAGS|([a-zA-Z_][a-zA-Z0-9_]*))?\s*'
@@ -882,7 +887,8 @@ for i in program_dict['instructions'].values():
              print(f"General Syntax Error in line {i['line']}")
              x=1
              break
-        
+
+#for Q3 instructions        
     if i['opcode'] == 'addf': #for F_Addition inst.
         if i['imm']!= -1: #immideate error handling done
               print(f"General Syntax Error in line {i['line']}")
@@ -957,6 +963,125 @@ for i in program_dict['instructions'].values():
             x = 1
             break    
 
+#Adding Bonus Instructions
+
+    if i['opcode'] == 'muli': #for multiply with immideate inst.
+        if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+            break
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+        elif i['imm'] != -1 and len(i['operands'])==1:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['muli']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+        else:
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
+    if i['opcode'] == 'divi': #for divide with immideate inst.
+        if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+            break
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+        elif i['imm'] != -1 and len(i['operands'])==1:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['divi']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+        else:
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
+    
+    if i['opcode'] == 'cmpi': #for compare with immideate inst.
+        if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+            break
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+        elif i['imm'] != -1 and len(i['operands'])==1:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['cmpi']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+        else:
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
+
+    if i['opcode'] == 'addi': #for addition with immideate inst.
+        if i['imm'] == -1 and len(i['operands']) == 2: #immideate error handling done
+            print("General Syntax Error")
+            x = 1
+            break
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+        elif i['imm'] != -1 and len(i['operands'])==1:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+            if x == 1:
+                break
+            result.append(Instructions['addi']['opcode']+regs_binary[i['operands'][0]]+i['imm'])
+        else:
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
+
+    if i['opcode'] == 'ex': #for Exchange inst.
+        if i['imm']!= -1 and len(i['operands'])!=2: #immideate error handling done
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
+
+        elif "FLAGS" in i['operands']:
+            print(f"Illegal use of FLAGS register in line {i['line']}")
+            x = 2
+            break
+
+        elif i['imm'] == -1 and len(i['operands'])==2:
+            for z in i['operands']:
+                if z not in ["R0","R1","R2","R3","R4","R5","R6","FLAGS"]:
+                    print(f"Typos in Register name in line {i['line']}")
+                    x = 1
+                    break
+
+            if x == 1:
+                break
+            result.append(Instructions['ex']['opcode']+'0'*5+regs_binary[i['operands'][0]]+regs_binary[i['operands'][1]])
+        else:
+            print(f"General Syntax Error in line {i['line']}")
+            x = 1
+            break
+#checking for Halt Instruction
     if i['opcode'] == 'hlt': #for halt inst.
         result.append(Instructions['hlt']['opcode']+'0'*11)
 
@@ -971,5 +1096,6 @@ if x == 0 and y == 0:
             sys.stdout.write(l+'\n')
         else:
             sys.stdout.write(l)
+
 
 

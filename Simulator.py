@@ -161,7 +161,7 @@ while (l<q):
         
         rs2 = s[9:16]
         imm=btd(rs2)
-        value=register_file[rs1]//imm
+        value=register_file[rds]//imm
 
         if(value>2**16):
             flag_val=3
@@ -214,11 +214,14 @@ while (l<q):
     #Add with immediate
 
     elif(opc=="10111"):
+
         rds = s[6:9]
         
         rs2 = s[9:16]
         imm=btd(rs2)
-        value=register_file[rs1]+imm
+        #print(rds)
+
+        value=register_file[rds]+imm
 
         if(value>2**16):
             flag_val=3

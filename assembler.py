@@ -155,7 +155,7 @@ with open('/home/akanksh/Downloads/assembler.txt', 'r') as f:
 #lines = []
 #for kx in sys.stdin:
 #    lines.append(kx)
-#lines = sys.stdin.readlines()
+lines = sys.stdin.readlines()
 #print(lines)
 
 # loop through lines in file and identify labels, instructions, and variables

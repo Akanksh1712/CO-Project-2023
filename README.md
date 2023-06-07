@@ -23,3 +23,5 @@ The register_file dictionary contains all the registers and their values. The me
 there are some defined functions like dtb(decimal  to binary),btd(binary to decimal), ftb(float to binary), btf(binary to float), etc, to make the code more compact and efficient.
 
 The code then reads instructions from mem dictionary and then executes them .The opcode of each instruction has been used to determine the respective working of the instruction. The code includes various instructions such as arithmetic operations (addition, subtraction, multiplication, division), logical operations (AND, OR, XOR), memory operations (load, store), register operations (move, exchange), and more.'
+
+Finally when all the working has been done the result is stored in the "result" list
